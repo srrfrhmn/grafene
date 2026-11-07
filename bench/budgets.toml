@@ -1,0 +1,30 @@
+# Performance budgets (design section 11).
+#
+# `cargo xtask bench` measures each metric below.
+# The job fails when:
+#   1. a metric is above its `budget` (optional), or
+#   2. a metric is more than `regression_limit` above the baseline from `main`,
+#      and the difference is more than the metric's `noise_floor`.
+#
+# Add a metric here in the milestone that adds the measured component.
+
+regression_limit = 0.10
+
+[metrics.cli_version_ms]
+description = "`grf --version`, median wall time"
+unit = "ms"
+budget = 10.0
+# Process start time on shared CI runners varies by approximately 1 ms.
+noise_floor = 1.0
+
+[metrics.cli_binary_bytes]
+description = "`grf` release binary size"
+unit = "bytes"
+# No budget in the design. Regressions are still checked.
+noise_floor = 0
+
+[metrics.server_binary_bytes]
+description = "`grf-server` release binary size"
+unit = "bytes"
+budget = 40_000_000
+noise_floor = 0

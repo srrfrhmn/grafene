@@ -1,0 +1,5 @@
+[toolchain]
+# Pinned so that benchmark results compare like with like.
+channel = "1.99.1"
+components = ["rustfmt", "clippy"]
+profile = "minimal"

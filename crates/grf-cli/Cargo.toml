@@ -1,0 +1,19 @@
+[package]
+name = "grf-cli"
+description = "Stacked pull requests and code review."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "grf"
+path = "src/main.rs"
+
+[dependencies]
+clap.workspace = true
+mimalloc.workspace = true
+
+[lints]
+workspace = true
