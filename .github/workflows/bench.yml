@@ -1,0 +1,71 @@
+# Performance budgets (design section 11).
+#
+# Pull requests: measure, then compare with the latest result from `main`.
+#   The job fails on a budget overrun or a regression of more than 10%.
+# Pushes to `main`: the same check. If it passes, keep the result on the
+#   `benchmarks` branch as results/<commit>.json and latest.json.
+#
+# All measurements use ubuntu-latest, so that results compare like with like.
+
+name: Bench
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: bench-${{ github.ref }}
+  # Do not cancel runs on main: each commit on main must get a result.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  bench:
+    name: performance budgets
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # push to the benchmarks branch (main only)
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install toolchain from rust-toolchain.toml
+        run: rustup toolchain install
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Get baseline from the benchmarks branch
+        run: |
+          if git fetch --depth=1 origin benchmarks; then
+            git show FETCH_HEAD:latest.json > baseline.json || rm -f baseline.json
+          else
+            echo "No benchmarks branch yet. Only budgets are checked."
+          fi
+
+      - name: Measure and check
+        run: >
+          cargo xtask bench
+          --baseline baseline.json
+          --out bench-result.json
+          --summary "$GITHUB_STEP_SUMMARY"
+
+      - name: Keep result (main only)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git fetch --depth=1 origin benchmarks; then
+            git worktree add --detach bench-data FETCH_HEAD
+          else
+            git worktree add --orphan -b benchmarks bench-data
+          fi
+          mkdir -p bench-data/results
+          cp bench-result.json "bench-data/results/${GITHUB_SHA}.json"
+          cp bench-result.json bench-data/latest.json
+          cd bench-data
+          git add -A
+          git commit -m "Bench results for ${GITHUB_SHA}"
+          git push origin HEAD:refs/heads/benchmarks

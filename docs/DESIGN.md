@@ -357,6 +357,7 @@ Each stage writes its output to the cache.
 {
   "id": "f_01J...",
   "rule": "ai.null-deref",
+  "rule_version": 1,
   "severity": "high",
   "confidence": "likely",
   "file": "src/auth/session.rs",
@@ -366,7 +367,7 @@ Each stage writes its output to the cache.
   "suggestion": "Replace unwrap() with a match on None.",
   "hunk_hash": "b3:9f2c...",
   "model": "claude-sonnet-5-5",
-  "cost_usd": 0.0041
+  "cost_usd_micros": 4100
 }
 ```
 
@@ -414,6 +415,7 @@ Notes:
 ## 11. Performance budgets
 
 These budgets are requirements. CI must measure them. A regression of more than 10% blocks the merge.
+CI measures on the `ubuntu-latest` runner. `bench/budgets.toml` holds the budgets that CI checks.
 
 | Metric                                         | Budget         |
 |------------------------------------------------|----------------|
